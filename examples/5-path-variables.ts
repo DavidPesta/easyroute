@@ -1,7 +1,7 @@
-import { serve, EasyRequest } from "../mod.ts";
+import { serve, EasyRequest, EasyResponse } from "../mod.ts";
 
-function pathWithVariables(_request: EasyRequest, one: string, two: boolean, three: number): Response {
-	return new Response(`${one} - ${two} - ${three}`);
+function pathWithVariables(_request: EasyRequest, one: string, two: boolean, three: number): EasyResponse {
+	return new EasyResponse(`${one} - ${two} - ${three}`);
 }
 
 serve({

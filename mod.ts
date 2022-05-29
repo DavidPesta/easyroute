@@ -1,17 +1,18 @@
-import { Status, STATUS_TEXT } from "https://deno.land/std@0.140.0/http/http_status.ts";
 import { ConnInfo, ServeInit, serve as stdServe } from "https://deno.land/std@0.140.0/http/server.ts";
 import { EasyRequest } from "./EasyRequest.ts";
+import { EasyResponse } from "./EasyResponse.ts";
 import { Routes, RouteParamOrder } from "./types.ts";
 export * from "./EasyRequest.ts";
+export * from "./EasyResponse.ts";
 
 /** serve() associates REST verbs and URL paths with handler functions that execute upon invoking them as endpoints.
  *
  * @example
  * ```ts
  * serve({
- * 	"GET /marco": () => new Response("polo"),
+ * 	"GET /marco": () => new EasyResponse("polo"),
  * 	"GET /hello": world,
- * 	"GET /json": () => jsonResponse({ message: "hello world" }),
+ * 	"GET /json": () => new EasyResponse(JSON.stringify({ message: "hello world" }), { type: "json" }),
  * 	"GET /path/with/variables/one:string/two:boolean/three:number": pathWithVariables
  * });
  * ```
@@ -45,9 +46,10 @@ export function serve(routes: Routes, options: ServeInit = { port: 8000 }): void
 	stdServe((request: Request, connInfo: ConnInfo) => handleRequest(request, connInfo, routes, routeParamOrders), options);
 }
 
-async function handleRequest(request: Request, connInfo: ConnInfo, routes: Routes, routeParamOrders: RouteParamOrder): Promise<Response> {
+async function handleRequest(request: Request, connInfo: ConnInfo, routes: Routes, routeParamOrders: RouteParamOrder): Promise<EasyResponse> {
 	try {
 		const easyRequest = new EasyRequest(request, connInfo);
+		if (["POST", "PUT", "DELETE"].includes(easyRequest.method)) await easyRequest.prepVars();
 		
 		for (const route in routes) {
 			if (easyRequest.matchRoute(route)) {
@@ -68,11 +70,11 @@ async function handleRequest(request: Request, connInfo: ConnInfo, routes: Route
 	}
 	catch (error) {
 		console.error("Error serving request:", error);
-		return jsonResponse({ error: error.message }, { status: 500 });
+		return new EasyResponse(JSON.stringify({ error: error.message }), { type: "json", status: 500 });
 	}
 }
 
-function handleError(request: Request, error: string, status: number): Response {
+function handleError(request: Request, error: string, status: number): EasyResponse {
 	if (request?.headers.get("accept")?.indexOf("text/html") !== -1) {
 		let header = "";
 		
@@ -84,13 +86,13 @@ function handleError(request: Request, error: string, status: number): Response 
 				header = "Error";
 		}
 		
-		return new Response(`<h1 align=center>${header}</h1><div align=center>${error}</div>`, {
+		return new EasyResponse(`<h1 align=center>${header}</h1><div align=center>${error}</div>`, {
 			status: status,
 			headers: { "Content-Type": "text/html; charset=utf-8" },
 		});
 	}
 	
-	return jsonResponse({ error }, { status });
+	return new EasyResponse(JSON.stringify({error}), { type: "json", status });
 }
 
 // Source: https://stackoverflow.com/a/31194949/508558 - Author: https://stackoverflow.com/users/1684079/humbletim
@@ -103,29 +105,4 @@ function getFunctionParams(func: Function) {
 		.split('){', 1)[0].replace(/^[^(]*[(]/, '') // extract the parameters  
 		.replace(/=[^,]+/g, '') // strip any ES6 defaults  
 		.split(',').filter(Boolean); // split & filter [""]
-}
-
-// Source: https://github.com/satyarohith/sift (MIT Licensed)
-/** Converts an object literal to a JSON string and returns
- * a Response with `application/json` as the `content-type`.
- *
- * @example
- * ```js
- * serve({
- * 	"/": () => jsonResponse({ message: "hello world"})
- * });
- * ```
- */
-export function jsonResponse(jsobj: Parameters<typeof JSON.stringify>[0], init?: ResponseInit): Response {
-	const headers = init?.headers instanceof Headers ? init.headers : new Headers(init?.headers);
-	
-	if (!headers.has("Content-Type")) {
-		headers.set("Content-Type", "application/json; charset=utf-8");
-	}
-	
-	return new Response(JSON.stringify(jsobj), {
-		statusText: init?.statusText ?? STATUS_TEXT.get(init?.status ?? Status.OK),
-		status: init?.status ?? Status.OK,
-		headers
-	});
 }

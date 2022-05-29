@@ -1,23 +1,24 @@
 import easy from "https://deno.land/x/easyutil@0.3.0/mod.ts";
 import { ConnInfo } from "https://deno.land/std@0.140.0/http/server.ts";
+import { getCookies } from "https://deno.land/std@0.140.0/http/mod.ts";
 
 export class EasyRequest {
 	ip: string;
 	referer: string;
 	language: string;
 	userAgent: string;
+	contentType: string;
+	contentLength: string;
 	method: string;
 	url: string;
 	origin: string;
 	host: string;
 	hostname: string;
-	pathVars: { [key: string]: string };
+	pathVars: Record<string, string>;
+	queryVars: Record<string, string>;
 	// deno-lint-ignore no-explicit-any
-	queryVars: { [key: string]: any };
-	// deno-lint-ignore no-explicit-any
-	bodyVars: { [key: string]: any };
-	// deno-lint-ignore no-explicit-any
-	cookieVars: { [key: string]: any };
+	bodyVars: Record<string, any>;
+	cookieVars: Record<string, string>;
 	protocol: string;
 	subdomain: string;
 	domain: string;
@@ -33,19 +34,27 @@ export class EasyRequest {
 	
 	constructor(request: Request, connInfo: ConnInfo) {
 		const urlInfo = new URL(request.url);
+		
+		const queryVars: Record<string, string> = {};
+		for(const param of urlInfo.searchParams) {
+			queryVars[param[0]] = param[1];
+		}
+		
 		this.ip = (connInfo.remoteAddr as Deno.NetAddr).hostname;
 		this.referer = request.headers.get("referer") ?? "";
 		this.language = request.headers.get("accept-language") ?? "";
 		this.userAgent = request.headers.get("user-agent") ?? "";
+		this.contentType = request.headers.get("content-type") ?? "";
+		this.contentLength = request.headers.get("content-length") ?? "";
 		this.method = request.method;
 		this.url = urlInfo.href;
 		this.origin = urlInfo.origin;
 		this.host = urlInfo.host;
 		this.hostname = urlInfo.hostname;
 		this.pathVars = {};
-		this.queryVars = {};
+		this.queryVars = queryVars;
 		this.bodyVars = {};
-		this.cookieVars = {};
+		this.cookieVars = getCookies(request.headers);
 		this.protocol = easy.string.trim.charsRight(urlInfo.protocol, [":"]);
 		this.subdomain = "";
 		this.domain = "";
@@ -58,6 +67,16 @@ export class EasyRequest {
 		this.body = "";
 		this.request = request;
 		this.connInfo = connInfo;
+	}
+	
+	async prepVars() {
+		// TODO: Add support for this.request.text()/arrayBuffer()/formData()
+		
+		if (this.contentType == "application/json") {
+			if (this.contentLength !== "") {
+				this.bodyVars = await this.request.json();
+			}
+		}
 	}
 	
 	matchRoute(route: string): boolean {

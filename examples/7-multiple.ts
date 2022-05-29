@@ -1,27 +1,27 @@
-import { serve, EasyRequest, jsonResponse } from "../mod.ts";
+import { serve, EasyRequest, EasyResponse } from "../mod.ts";
 
-function world(): Response {
-	return new Response("world");
+function world(): EasyResponse {
+	return new EasyResponse("world");
 }
 
-function query(request: EasyRequest): Response {
-	return new Response(JSON.stringify(request.queryVars));
+function query(request: EasyRequest): EasyResponse {
+	return new EasyResponse(JSON.stringify(request.queryVars));
 }
 
-function pathWithVariables(_request: EasyRequest, one: string, two: boolean, three: number): Response {
-	return new Response(`${one} - ${two} - ${three}`);
+function pathWithVariables(_request: EasyRequest, one: string, two: boolean, three: number): EasyResponse {
+	return new EasyResponse(`${one} - ${two} - ${three}`);
 }
 
 class SomeClass {
-	static staticMethod(): Response {
-		return new Response("staticMethod response");
+	static staticMethod(): EasyResponse {
+		return new EasyResponse("staticMethod response");
 	}
 }
 
 serve({
-	"GET /marco": () => new Response("polo"),
+	"GET /marco": () => new EasyResponse("polo"),
 	"GET /hello": world,
-	"GET /json": () => jsonResponse({ message: "hello world" }),
+	"GET /json": () => new EasyResponse(JSON.stringify({ message: "hello world" }), { type: "json" }),
 	"GET /query": query,
 	"GET /static-method": SomeClass.staticMethod,
 	"GET /path/with/variables/one:string/two:boolean/three:number": pathWithVariables

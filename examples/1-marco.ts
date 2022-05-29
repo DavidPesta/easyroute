@@ -1,5 +1,5 @@
-import { serve } from "../mod.ts";
+import { serve, EasyResponse } from "../mod.ts";
 
 serve({
-	"GET /marco": () => new Response("polo")
+	"GET /marco": () => new EasyResponse("polo")
 });

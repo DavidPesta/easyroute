@@ -1,7 +1,7 @@
-import { serve } from "../mod.ts";
+import { serve, EasyResponse } from "../mod.ts";
 
-function world(): Response {
-	return new Response("world");
+function world(): EasyResponse {
+	return new EasyResponse("world");
 }
 
 serve({

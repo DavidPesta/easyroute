@@ -1,8 +1,8 @@
-import { serve } from "../mod.ts";
+import { serve, EasyResponse } from "../mod.ts";
 
 class SomeClass {
-	static staticMethod(): Response {
-		return new Response("staticMethod response");
+	static staticMethod(): EasyResponse {
+		return new EasyResponse("staticMethod response");
 	}
 }
 

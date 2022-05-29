@@ -1,5 +1,5 @@
-import { serve, jsonResponse } from "../mod.ts";
+import { serve, EasyResponse } from "../mod.ts";
 
 serve({
-	"GET /json": () => jsonResponse({ message: "hello world" }),
+	"GET /json": () => new EasyResponse(JSON.stringify({ message: "hello world" }), { type: "json" })
 });
