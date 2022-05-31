@@ -72,13 +72,18 @@ export class EasyRequest {
 		
 		this.body = await this.request.text();
 		
-		if (this.contentType == "application/json") {
+		if (this.contentType.indexOf("application/json") !== -1) {
 			if (this.contentLength !== "") {
-				this.bodyVars = JSON.parse(this.body);
+				try {
+					this.bodyVars = JSON.parse(this.body);
+				}
+				catch {
+					throw new Error("The content type used is application/json, but the body failed to parse as JSON.");
+				}
 			}
 		}
 		
-		if (this.contentType == "application/x-www-form-urlencoded") {
+		if (this.contentType.indexOf("application/x-www-form-urlencoded") !== -1) {
 			this.bodyVars = easy.string.parse.urlQuery(this.body);
 		}
 	}
