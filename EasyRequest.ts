@@ -1,6 +1,6 @@
-import easy from "https://deno.land/x/easyutil@0.3.0/mod.ts";
-import { ConnInfo } from "https://deno.land/std@0.140.0/http/server.ts";
-import { getCookies } from "https://deno.land/std@0.140.0/http/mod.ts";
+import easy from "https://deno.land/x/easyutil@0.6.0/mod.ts";
+import { ConnInfo } from "https://deno.land/std@0.141.0/http/server.ts";
+import { getCookies } from "https://deno.land/std@0.141.0/http/mod.ts";
 
 export class EasyRequest {
 	ip: string;
@@ -26,6 +26,7 @@ export class EasyRequest {
 	port: number;
 	path: string;
 	filename: string;
+	ext: string;
 	query: string;
 	fragment: string;
 	body: string;
@@ -33,12 +34,8 @@ export class EasyRequest {
 	connInfo: ConnInfo;
 	
 	constructor(request: Request, connInfo: ConnInfo) {
-		const urlInfo = new URL(request.url);
-		
-		const queryVars: Record<string, string> = {};
-		for(const param of urlInfo.searchParams) {
-			queryVars[param[0]] = param[1];
-		}
+		const url = new URL(request.url);
+		const urlInfo = easy.string.parse.url(request.url);
 		
 		this.ip = (connInfo.remoteAddr as Deno.NetAddr).hostname;
 		this.referer = request.headers.get("referer") ?? "";
@@ -47,35 +44,42 @@ export class EasyRequest {
 		this.contentType = request.headers.get("content-type") ?? "";
 		this.contentLength = request.headers.get("content-length") ?? "";
 		this.method = request.method;
-		this.url = urlInfo.href;
-		this.origin = urlInfo.origin;
-		this.host = urlInfo.host;
-		this.hostname = urlInfo.hostname;
+		this.url = url.href;
+		this.origin = url.origin;
+		this.host = url.host;
+		this.hostname = url.hostname;
 		this.pathVars = {};
-		this.queryVars = queryVars;
+		this.queryVars = easy.string.parse.urlQuery(urlInfo.query);
 		this.bodyVars = {};
 		this.cookieVars = getCookies(request.headers);
-		this.protocol = easy.string.trim.charsRight(urlInfo.protocol, [":"]);
-		this.subdomain = "";
-		this.domain = "";
-		this.tld = "";
-		this.port = parseInt(urlInfo.port);
-		this.path = urlInfo.pathname;
-		this.filename = "";
-		this.query = "";
-		this.fragment = "";
+		this.protocol = urlInfo.protocol;
+		this.subdomain = urlInfo.subdomain;
+		this.domain = urlInfo.domain;
+		this.tld = urlInfo.tld;
+		this.port = (connInfo.localAddr as Deno.NetAddr).port;
+		this.path = urlInfo.path;
+		this.filename = urlInfo.filename;
+		this.ext = urlInfo.ext;
+		this.query = urlInfo.query;
+		this.fragment = urlInfo.fragment;
 		this.body = "";
 		this.request = request;
 		this.connInfo = connInfo;
 	}
 	
 	async prepVars() {
-		// TODO: Add support for this.request.text()/arrayBuffer()/formData()
+		// TODO: Add support for multipart/form-data to enable file uploads. Here is knowledge: https://stackoverflow.com/a/4073451/508558
+		
+		this.body = await this.request.text();
 		
 		if (this.contentType == "application/json") {
 			if (this.contentLength !== "") {
-				this.bodyVars = await this.request.json();
+				this.bodyVars = JSON.parse(this.body);
 			}
+		}
+		
+		if (this.contentType == "application/x-www-form-urlencoded") {
+			this.bodyVars = easy.string.parse.urlQuery(this.body);
 		}
 	}
 	

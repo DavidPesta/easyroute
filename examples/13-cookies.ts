@@ -1,4 +1,4 @@
-import easy from "https://deno.land/x/easyutil@0.3.0/mod.ts";
+import easy from "https://deno.land/x/easyutil@0.6.0/mod.ts";
 import { serve, EasyRequest, EasyResponse } from "../mod.ts";
 
 function htmlPage(request: EasyRequest): EasyResponse {

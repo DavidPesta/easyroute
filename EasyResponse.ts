@@ -1,4 +1,4 @@
-import { Cookie, setCookie, deleteCookie } from "https://deno.land/std@0.140.0/http/mod.ts";
+import { Cookie, setCookie, deleteCookie } from "https://deno.land/std@0.141.0/http/mod.ts";
 import { EasyResponseInit, CookieOptions } from "./types.ts";
 
 export class EasyResponse extends Response {

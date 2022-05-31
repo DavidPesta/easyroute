@@ -1,4 +1,4 @@
-import { ConnInfo, ServeInit, serve as stdServe } from "https://deno.land/std@0.140.0/http/server.ts";
+import { ConnInfo, ServeInit, serve as stdServe } from "https://deno.land/std@0.141.0/http/server.ts";
 import { EasyRequest } from "./EasyRequest.ts";
 import { EasyResponse } from "./EasyResponse.ts";
 import { Routes, RouteParamOrder } from "./types.ts";
@@ -49,7 +49,7 @@ export function serve(routes: Routes, options: ServeInit = { port: 8000 }): void
 async function handleRequest(request: Request, connInfo: ConnInfo, routes: Routes, routeParamOrders: RouteParamOrder): Promise<EasyResponse> {
 	try {
 		const easyRequest = new EasyRequest(request, connInfo);
-		if (["POST", "PUT", "DELETE"].includes(easyRequest.method)) await easyRequest.prepVars();
+		await easyRequest.prepVars();
 		
 		for (const route in routes) {
 			if (easyRequest.matchRoute(route)) {
