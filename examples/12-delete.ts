@@ -1,4 +1,4 @@
-import { serve, EasyRequest, EasyResponse } from "https://deno.land/x/easyroute@0.1.0/mod.ts";
+import { serve, EasyRequest, EasyResponse } from "https://deno.land/x/easyroute@0.2.0/mod.ts";
 
 const htmlContent = `<!DOCTYPE html>
 <html>

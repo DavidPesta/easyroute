@@ -22,7 +22,15 @@ export function serve(routes: Routes, options: ServeInit = { port: 8000 }): void
 	// be done without resorting to decorators and such. But this will provide a fair measure of mistake prevention and is good enough for now.
 	const routeParamOrders: RouteParamOrder = {};
 	for (const route in routes) {
-		const routeParamOrder = getFunctionParams(routes[route]);
+		let routeParamOrder: string[] = [];
+		const handlerComplex = routes[route];
+		if (handlerComplex instanceof Array) {
+			routeParamOrder = getFunctionParams(handlerComplex[1]);
+		}
+		else {
+			routeParamOrder = getFunctionParams(handlerComplex);
+		}
+		
 		routeParamOrder.shift();
 		
 		routeParamOrders[route] = [...routeParamOrder]; // We need to clone this because we want to use it later.
@@ -60,9 +68,14 @@ async function handleRequest(request: Request, connInfo: ConnInfo, routes: Route
 					orderedPathVars.push(easyRequest.pathVars[param]);
 				}
 				
-				const response = await routes[route](easyRequest, ...orderedPathVars);
-				
-				return response;
+				const handlerComplex = routes[route];
+				if (handlerComplex instanceof Array) {
+					const [$this, handler] = handlerComplex;
+					return await handler.call($this, easyRequest, ...orderedPathVars);
+				}
+				else {
+					return await handlerComplex(easyRequest, ...orderedPathVars);
+				}
 			}
 		}
 		
@@ -97,12 +110,12 @@ function handleError(request: Request, error: string, status: number): EasyRespo
 
 // Source: https://stackoverflow.com/a/31194949/508558 - Author: https://stackoverflow.com/users/1684079/humbletim
 // deno-lint-ignore ban-types
-function getFunctionParams(func: Function) {  
+function getFunctionParams(func: Function) {
 	return (func + '')
-		.replace(/[/][/].*$/mg,'') // strip single-line comments
+		.replace(/[/][/].*$/mg, '') // strip single-line comments
 		.replace(/\s+/g, '') // strip white space
-		.replace(/[/][*][^/*]*[*][/]/g, '') // strip multi-line comments  
-		.split('){', 1)[0].replace(/^[^(]*[(]/, '') // extract the parameters  
-		.replace(/=[^,]+/g, '') // strip any ES6 defaults  
+		.replace(/[/][*][^/*]*[*][/]/g, '') // strip multi-line comments
+		.split('){', 1)[0].replace(/^[^(]*[(]/, '') // extract the parameters
+		.replace(/=[^,]+/g, '') // strip any ES6 defaults
 		.split(',').filter(Boolean); // split & filter [""]
 }

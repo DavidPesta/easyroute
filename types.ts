@@ -2,10 +2,11 @@ import { EasyRequest } from "./EasyRequest.ts";
 import { EasyResponse } from "./EasyResponse.ts";
 
 // deno-lint-ignore no-explicit-any
-type Handler = (request: EasyRequest, ...args: any[]) => EasyResponse | Promise<EasyResponse>;
+export type Handler = (request: EasyRequest, ...args: any[]) => EasyResponse | Promise<EasyResponse>;
 
 export interface Routes {
-	[path: string]: Handler;
+	// deno-lint-ignore ban-types
+	[path: string]: Handler|[object, Handler];
 }
 
 export type RouteParamOrder = { [key: string]: string[] };

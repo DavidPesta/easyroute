@@ -2,7 +2,7 @@ import { Cookie, setCookie, deleteCookie } from "https://deno.land/std@0.141.0/h
 import { EasyResponseInit, CookieOptions } from "./types.ts";
 
 export class EasyResponse extends Response {
-	constructor(body?: BodyInit | null, init?: EasyResponseInit) {
+	constructor(body?: BodyInit | undefined, init?: EasyResponseInit) {
 		super(body, init);
 		
 		if (init?.type === "html") {
@@ -20,7 +20,7 @@ export class EasyResponse extends Response {
 			value
 		};
 		
-		if (options != null) {
+		if (options != undefined) {
 			cookie.expires = options.expires;
 			cookie.maxAge = options.maxAge;
 			cookie.domain = options.domain;

@@ -1,4 +1,4 @@
-import { serve, EasyRequest, EasyResponse } from "https://deno.land/x/easyroute@0.1.0/mod.ts";
+import { serve, EasyRequest, EasyResponse } from "https://deno.land/x/easyroute@0.2.0/mod.ts";
 
 const htmlContent = `<!DOCTYPE html>
 <html>
@@ -10,7 +10,7 @@ const htmlContent = `<!DOCTYPE html>
 			<input type="button" value="Submit" onclick="submitPost();" />
 		</p>
 		<p>
-			<form method="POST" action="/post-page">
+			<form method="POST" action="/post-form">
 				Form Post<br />
 				<input type="text" name="field1" /> Field 1<br />
 				<input type="text" name="field2" /> Field 2<br />
@@ -45,7 +45,7 @@ function postData(request: EasyRequest): EasyResponse {
 	return new EasyResponse(JSON.stringify(request.bodyVars), { type: "json" });
 }
 
-function postPage(request: EasyRequest): EasyResponse {
+function postForm(request: EasyRequest): EasyResponse {
 	console.log(request.bodyVars);
 	return new EasyResponse(htmlContent, { type: "html" });
 }
@@ -53,5 +53,5 @@ function postPage(request: EasyRequest): EasyResponse {
 serve({
 	"GET /": () => new EasyResponse(htmlContent, { type: "html" }),
 	"POST /data": postData,
-	"POST /post-page": postPage
+	"POST /post-form": postForm
 });
